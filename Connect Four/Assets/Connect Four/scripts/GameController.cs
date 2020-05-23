@@ -56,10 +56,8 @@ namespace ConnectFour
 
 		bool isPlayersTurn = true;
 		bool isLoading = true;
-
 		bool isDropping = false; 
 		bool mouseButtonPressed = false;
-
 		bool gameOver = false;
 		bool isCalculating = false;
 		bool isCheckingForWinner = false;
@@ -143,12 +141,12 @@ namespace ConnectFour
 				int best = -100000;
 				List<int> moves = GetPossibleMoves();
 				for(int i = 0; i < moves.Count; i++){
-					for(int j = field.GetLength(0) - 1; j >= 0; j--){
-						if(field[j,moves[i]] == 0){
-							field[j,moves[i]] = 2;
+					for(int j = field.GetLength(1) - 1; j >= 0; j--){
+						if(field[moves[i], j] == 0){
+							field[moves[i], j] = 2;
 							best = max(best, Calculate(depth + 1, alpha, beta, !isMax));
 							alpha = max(alpha,best);
-							field[j,moves[i]] = 0;
+							field[moves[i], j] = 0;
 							if(alpha >= beta)break;							
 						}
 					}
@@ -160,12 +158,12 @@ namespace ConnectFour
 				int best = 100000;
 				List<int> moves = GetPossibleMoves();
 				for(int i = 0; i < moves.Count; i++){
-					for(int j = field.GetLength(0) - 1; j >= 0; j--){
-						if(field[j,moves[i]] == 0){
-							field[j,moves[i]] = 1;
+					for(int j = field.GetLength(1) - 1; j >= 0; j--){
+						if(field[moves[i], j] == 0){
+							field[moves[i], j] = 1;
 							best = min(best, Calculate(depth + 1, alpha, beta, !isMax));
 							beta = max(alpha,best);
-							field[j,moves[i]] = 0;
+							field[moves[i], j] = 0;
 							if(alpha >= beta)break;
 						}
 					}
@@ -184,19 +182,19 @@ namespace ConnectFour
 							if(field[i,j] == 2) return 10;
 						}
 					}
-					if(j < field.GetLength(0) - 3){
+					if(j < field.GetLength(1) - 3){
 						if(field[i,j] == field[i, j+1] && field[i,j] == field[i,j+2] && field[i,j] == field[i,j+3]){
 							if(field[i,j] == 1) return -10;
 							if(field[i,j] == 2) return 10;
 						}
 					}
-					if(i >= 3 && j < field.GetLength(0) - 3){ 
+					if(i >= 3 && j < field.GetLength(1) - 3){ 
 						if(field[i,j] == field[i - 1, j + 1] && field[i,j] == field[i - 2, j + 2] && field[i,j] == field[i - 3, j + 3]){
 							if(field[i,j] == 1) return -10;
 							if(field[i,j] == 2) return 10;
 						}
 					}
-					if(i < field.GetLength(0) - 3 && j < field.GetLength(0) - 3){
+					if(i < field.GetLength(0) - 3 && j < field.GetLength(1) - 3){
 						if(field[i,j] == field[i + 1, j + 1] && field[i,j] == field[i + 2, j + 2] && field[i,j] == field[i + 3, j + 3]){
 							if(field[i,j] == 1) return -10;
 							if(field[i,j] == 2) return 10;
@@ -219,13 +217,13 @@ namespace ConnectFour
 					int column = moves[Random.Range (0, moves.Count)];		
 					int best = -1000;			
 					for(int i = 0; i < moves.Count; i++){
-						for(int j = field.GetLength(0) - 1; j >= 0; j--){
-							if(field[j,moves[i]] == 0){
-								field[j,moves[i]] = 2;
-								move = Calculate(1, -1000000, 1000000, false);
-								field[j,moves[i]] = 0;	
-								if(moves > best){
-									column = i;
+						for(int j = field.GetLength(1) - 1; j >= 0; j--){
+							if(field[moves[i], j] == 0){
+								field[moves[i], j] = 2;
+								int move = Calculate(1, -1000000, 1000000, false);
+								field[moves[i], j] = 0;	
+								if(move > best){
+									column = moves[i];
 									best = move;
 								}					
 							}
