@@ -56,13 +56,23 @@ namespace ConnectFour
 
 		bool isPlayersTurn = true;
 		bool isLoading = true;
+
 		bool isDropping = false; 
 		bool mouseButtonPressed = false;
 
 		bool gameOver = false;
+		bool isCalculating = false;
 		bool isCheckingForWinner = false;
 
 		// Use this for initialization
+		public int max(int a, int b){
+   			if(a > b)return a;
+    		return b;
+  		}
+  		public int min(int a, int b){
+    		if(a<b)return a;
+    		return b;
+  		}
 		void Start () 
 		{
 			int max = Mathf.Max (numRows, numColumns);
@@ -124,6 +134,78 @@ namespace ConnectFour
 		/// Spawns a piece at mouse position above the first row
 		/// </summary>
 		/// <returns>The piece.</returns>
+		int Calculate(int depth, int alpha, int beta, bool isMax){
+			int finalScore = checkVictor();
+			if(finalScore == -10) return finalScore;
+			if(finalScore == 10) return finalScore;
+			if(!FieldContainsEmptyCell()) return 0;
+			if(isMax){
+				int best = -100000;
+				List<int> moves = GetPossibleMoves();
+				for(int i = 0; i < moves.Count; i++){
+					for(int j = field.GetLength(0) - 1; j >= 0; j--){
+						if(field[j,moves[i]] == 0){
+							field[j,moves[i]] = 2;
+							best = max(best, Calculate(depth + 1, alpha, beta, !isMax));
+							alpha = max(alpha,best);
+							field[j,moves[i]] = 0;
+							if(alpha >= beta)break;							
+						}
+					}
+					if(alpha >= beta)break;
+				}
+				return best - depth;
+			}
+			else{
+				int best = 100000;
+				List<int> moves = GetPossibleMoves();
+				for(int i = 0; i < moves.Count; i++){
+					for(int j = field.GetLength(0) - 1; j >= 0; j--){
+						if(field[j,moves[i]] == 0){
+							field[j,moves[i]] = 1;
+							best = min(best, Calculate(depth + 1, alpha, beta, !isMax));
+							beta = max(alpha,best);
+							field[j,moves[i]] = 0;
+							if(alpha >= beta)break;
+						}
+					}
+					if(alpha >= beta)break;
+				}
+				return best + depth;
+			}
+		}
+		int checkVictor(){
+			for(int i = 0; i < field.GetLength(0); i++){
+				for(int j = 0; j < field.GetLength(1); j++){
+					if(field[i,j] != 0)continue;
+					if(i < field.GetLength(0) - 3){
+						if(field[i,j] == field[i + 1, j] && field[i,j] == field[i + 2,j] && field[i,j] == field[i + 3,j]){
+							if(field[i,j] == 1) return -10;
+							if(field[i,j] == 2) return 10;
+						}
+					}
+					if(j < field.GetLength(0) - 3){
+						if(field[i,j] == field[i, j+1] && field[i,j] == field[i,j+2] && field[i,j] == field[i,j+3]){
+							if(field[i,j] == 1) return -10;
+							if(field[i,j] == 2) return 10;
+						}
+					}
+					if(i >= 3 && j < field.GetLength(0) - 3){ 
+						if(field[i,j] == field[i - 1, j + 1] && field[i,j] == field[i - 2, j + 2] && field[i,j] == field[i - 3, j + 3]){
+							if(field[i,j] == 1) return -10;
+							if(field[i,j] == 2) return 10;
+						}
+					}
+					if(i < field.GetLength(0) - 3 && j < field.GetLength(0) - 3){
+						if(field[i,j] == field[i + 1, j + 1] && field[i,j] == field[i + 2, j + 2] && field[i,j] == field[i + 3, j + 3]){
+							if(field[i,j] == 1) return -10;
+							if(field[i,j] == 2) return 10;
+						}
+					}
+				}
+			}
+			return 0;
+		}
 		GameObject SpawnPiece()
 		{
 			Vector3 spawnPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -134,8 +216,21 @@ namespace ConnectFour
 
 				if(moves.Count > 0)
 				{
-					int column = moves[Random.Range (0, moves.Count)];
-
+					int column = moves[Random.Range (0, moves.Count)];		
+					int best = -1000;			
+					for(int i = 0; i < moves.Count; i++){
+						for(int j = field.GetLength(0) - 1; j >= 0; j--){
+							if(field[j,moves[i]] == 0){
+								field[j,moves[i]] = 2;
+								move = Calculate(1, -1000000, 1000000, false);
+								field[j,moves[i]] = 0;	
+								if(moves > best){
+									column = i;
+									best = move;
+								}					
+							}
+						}
+					}
 					spawnPos = new Vector3(column, 0, 0);
 				}
 			}
@@ -183,6 +278,9 @@ namespace ConnectFour
 		void Update () 
 		{
 			if(isLoading)
+				return;
+
+			if(isCalculating)
 				return;
 
 			if(isCheckingForWinner)
